@@ -1,0 +1,105 @@
+COMSATS University Islamabad,
+COMSATS Road, off GT Road, Sahiwal, Pakistan
+SOFTWARE DESIGN DESCRIPTION
+(SDD DOCUMENT)
+for
+M2B
+Version 1.0
+By
+M Umar	CIIT/ SP22-BCS-159/SWL
+Sarfraz Ahmad	CIIT/ SP22-BCS-157/SWL
+M Tayyab	CIIT/ SP22-BCS-168/SWL
+Supervisor
+Dr. Yawar Abbas Abid
+Co-Supervisor
+Mr. Ali Sher Kashif
+Bachelor of Science in Computer Science (2022-2026)
+Table of Contents
+1.Intorduction:	6
+2. Scope:	6
+3. Design Methodology and Software Process Model:	6
+3.1 Design Methodology: Kotlin and Xml (firebase):	6
+3.2 Suitable Methodology: Agile Software Development Methodology:	7
+4 System Overview:	7
+4.1 Architecture Design:	8
+4.2 Process Flow:	9
+5. Design Models:	10
+5.1 Sequence Diagram:	10
+5.2 Class Diagram:	11
+6. Data Design:	11
+6.1 Key aspects of the data design include:	12
+6.2 Database Structure:	12
+7. Human Interface Design:	13
+Table of Figures
+Figure 1 Architecture Design	8
+Figure 2 Process Flow	9
+Figure 3 Sequence Diagram	10
+Figure 4 Class Diagram	11
+Figure 5 Register/Login	13
+Figure 6 Signup Page	13
+Figure 7 Chat	14
+Figure 8 Information Page	14
+Figure 9 Patient Page	15
+Figure 10 Doctors Option	15
+Revision History
+Name
+Date
+Reason for changes
+Version
+Application Evaluation History
+Comments (by committee)
+Presentation
+Supervised by
+Dr. Yawar Abbas Abid
+Signature
+1.Intorduction:
+Pregnant women's health and well-being are of utmost importance, especially during a time when both mother and child require continuous care and close monitoring. Unfortunately, many expecting mothers struggle to maintain accurate and up-to-date health records, and healthcare providers often face difficulty accessing this critical information during consultations. The lack of a centralized and real-time health monitoring system can lead to delayed treatments, missed symptoms, and compromised care quality. Our proposed application addresses these challenges by offering a digital health platform specifically designed for pregnant women. By integrating smartwatch technology and manual input options, the system allows users to track vital signs such as heart rate, blood pressure, and other pregnancy-related metrics. These records are securely stored and made accessible to the doctors they subscribe to, ensuring timely medical interventions. Doctors can review patient data, provide personalized recommendations, and communicate directly with their patients through an in-app chat. This approach not only improves the quality of prenatal care but also empowers women to take control of their health during pregnancy. Ultimately, the system fosters a safer and more connected environment for managing maternal health.
+2. Scope:
+Through integration with a smartwatch, our program guarantees that expectant mothers may conveniently store and track their health information, such as heart rate, blood pressure, and other critical symptoms. Patients can employ doctors for individualized care, maintain their profiles, and monitor daily health data. Through an integrated chat system, doctors may interact with patients, check their medical records, and make recommendations. The platform also offers a subscription-based payment plan that lets users pay once for a month of individualized treatment. The system is intended to make health monitoring easier while offering safe, open, and effective prenatal care.
+3. Design Methodology and Software Process Model:
+3.1 Design Methodology: Kotlin and Xml (firebase):
+The application is developed using Kotlin for backend logic and XML for front-end layout design, ensuring a smooth, native Android experience. Kotlin provides concise, safe, and modern programming features, which enhance performance and reduce boilerplate code. The user interface is structured with XML to create intuitive and responsive layouts suitable for various screen sizes. For backend services, Firebase is used as a cloud-based platform offering real-time database access, secure user authentication, and seamless data synchronization. Firebase also manages chat functionality, health data storage, and subscription handling. This combination of technologies supports scalable, real-time operations with minimal latency and high reliability, which is crucial for a health-focused mobile application.
+3.2 Suitable Methodology: Agile Software Development Methodology:
+For the M2B (Mother to Be) project, the most suitable software requirement methodology is the “Agile Development Methodology”. Agile is an iterative and flexible approach that allows the development team to respond quickly to changes in requirements, which is essential for a dynamic and user-centered healthcare application. The nature of the M2B project — involving real-time health monitoring, smartwatch integration, patient-doctor communication, and evolving user needs — makes Agile an ideal choice. It enables the team to divide the work into short, manageable sprints where each module (such as chat, data sync, or recommendations) can be developed, tested, and improved based on continuous feedback. Agile also promotes close collaboration among developers, designers, and stakeholders, ensuring that the application remains aligned with both user expectations and medical standards. This methodology not only reduces development risk but also enhances the overall quality and usability of the final product.
+4 System Overview:
+Pregnancy is a critical period that demands continuous health monitoring, timely medical consultations, and reliable access to healthcare information. However, in many cases, expecting mothers face difficulties in maintaining accurate health records or communicating effectively with healthcare providers, especially in remote or under-resourced areas. Additionally, doctors often lack real-time access to patient data, making it challenging to offer personalized treatment or detect complications early. With the rise of digital health technologies and wearable devices, there is a growing opportunity to bridge this gap through mobile solutions. The M2B (Mother to Be) application is designed to address these challenges by providing a smart health-monitoring platform for pregnant women. It integrates smartwatch data and manual inputs to track vital signs and ensures that doctors can access this information for timely guidance and care. This project aims to leverage mobile technology to make prenatal healthcare more accessible, efficient, and personalized.
+4.1 Architecture Design:
+The system uses a three-tier architecture consisting of the Presentation Layer, Application Logic Layer, and Backend Services. It is designed to serve three primary user roles: Patients, Doctors, and Admin. The mobile app interacts with Firebase services for real-time data handling, authentication, and cloud storage. Health data is collected from smartwatches via APIs and securely stored. Doctors can access patient data (only upon subscription), provide treatment recommendations, and chat in real-time. Admins manage system-wide operations, including user approval and monitoring.
+Figure 1 Architecture Design
+4.2 Process Flow:
+Figure 2 Process Flow
+5. Design Models:
+The design models provide a blueprint for how the system components interact and operate. They include architectural, structural, and behavioral representations to illustrate the system’s data flow, component interactions, and user scenarios. These models help ensure clarity in development and serve as a guide for implementation.
+5.1 Sequence Diagram:
+The sequence diagram illustrates the interaction flow between system components over time for a specific scenario. It shows how patients, doctors, and the system exchange messages during actions like logging in, tracking health data, or consulting a doctor. This helps visualize the order of operations and system responses. It ensures smooth communication and functionality across modules.
+Figure 3 Sequence Diagram
+5.2 Class Diagram:
+The class diagram represents the static structure of the system by showing its classes, attributes, methods, and relationships. It defines how entities like Patient, Doctor, Admin, and HealthRecord are related and how they interact with each other. This model is essential for understanding object-oriented design and data organization. It guides developers in implementing the system's core logic and structure.
+Figure 4 Class Diagram
+6. Data Design:
+The data design defines the logical and physical structure of the database and outlines how data is collected, stored, accessed, and maintained within the "Mother to Babe" system. It ensures efficient handling of sensitive medical information, user profiles, doctor subscriptions, and appointment scheduling. The design prioritizes data integrity, security, scalability, and regulatory compliance (e.g., HIPAA, GDPR).
+6.1 Key aspects of the data design include:
+Entity-Relationship (ER) Modeling: Key entities such as Patient, Doctor, Admin, HealthRecord, Appointment, Subscription, and ChatMessage are identified, with their attributes and relationships. Each entity is assigned a unique identifier (e.g., PatientID, DoctorID).
+6.2 Database Structure:
+Firebase Firestore (NoSQL) is used for dynamic data like health logs, messages, and user actions.
+Firebase Storage is used for storing large files such as scanned medical documents or smartwatch data files.
+Data is organized in collections (e.g., patients, doctors, healthRecords, appointments) with documents representing individual records.
+Data Flow:
+Health data flows from the smartwatch to the mobile app, then gets synced to the Firebase backend.
+Patients can view their own data; doctors can access only the data of subscribed patients.
+Admins have broader access for monitoring, conflict resolution, and system oversight.
+Security Measures:
+Data is encrypted at rest and in transit.
+Firebase Authentication and Role-Based Access Control (RBAC) ensure secure access.
+Backup and restore mechanisms are in place for data recovery.
+7. Human Interface Design:
+Figure 5 Register/Login
+Figure 6 Signup Page
+Figure 7 Chat
+Figure 8 Information Page
+Figure 9 Patient Page
+Figure 10 Doctors Option
+References:
+[1] IEEE Guidelines for Health Data Management
+[2] Health Insurance Portability and Accountability Act of 1996 (HIPAA)
+[3] General Data Protection Regulation GDPR

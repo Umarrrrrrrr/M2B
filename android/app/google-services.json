@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1075254436070",
+    "project_id": "m2bfyp",
+    "storage_bucket": "m2bfyp.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1075254436070:android:d61c7a7f86f807178a5b27",
+        "android_client_info": {
+          "package_name": "com.example.fyp_m2b"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA719zaHgLyt9MF-rr90v1i_gIEqhPVLog"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
