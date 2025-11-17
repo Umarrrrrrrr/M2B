@@ -2,10 +2,13 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+import '../chat/chat_screen.dart';
+import '../services/chat_service.dart';
 import '../services/subscription_service.dart';
 import '../widgets/info_chip.dart';
 
 final _subscriptionService = SubscriptionService();
+final _chatService = ChatService();
 
 class PatientDashboard extends StatelessWidget {
   const PatientDashboard({super.key, required this.user});
@@ -44,18 +47,24 @@ class PatientDashboard extends StatelessWidget {
               children: [
                 _PatientHeader(data: data, emailFallback: user.email),
                 const SizedBox(height: 16),
-                Row(
+                Wrap(
+                  spacing: 12,
+                  runSpacing: 12,
                   children: [
                     ElevatedButton.icon(
                       onPressed: () => _showRecordSheet(context, uid),
                       icon: const Icon(Icons.favorite),
                       label: const Text('Add health record'),
                     ),
-                    const SizedBox(width: 12),
                     OutlinedButton.icon(
                       onPressed: () => _promptSubscription(context, uid),
                       icon: const Icon(Icons.person_add_alt_1),
                       label: const Text('Request doctor'),
+                    ),
+                    OutlinedButton.icon(
+                      onPressed: () => _openChat(context, patientId: uid),
+                      icon: const Icon(Icons.chat_bubble_outline),
+                      label: const Text('Open chat'),
                     ),
                   ],
                 ),
@@ -130,6 +139,40 @@ Future<void> _promptSubscription(BuildContext context, String patientId) async {
       SnackBar(content: Text('Failed to send request: $e')),
     );
   }
+}
+
+Future<String?> _promptDoctorId(BuildContext context) async {
+  final controller = TextEditingController();
+  final messenger = ScaffoldMessenger.of(context);
+  final result = await showDialog<String>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: const Text('Enter doctor ID'),
+      content: TextField(
+        controller: controller,
+        decoration: const InputDecoration(
+          labelText: 'Doctor UID',
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(ctx).pop(),
+          child: const Text('Cancel'),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.of(ctx).pop(controller.text.trim()),
+          child: const Text('Continue'),
+        ),
+      ],
+    ),
+  );
+  if (result == null || result.isEmpty) {
+    messenger.showSnackBar(
+      const SnackBar(content: Text('Doctor ID required.')),
+    );
+    return null;
+  }
+  return result;
 }
 
 class _PatientHeader extends StatelessWidget {
@@ -450,4 +493,30 @@ class _HealthRecordFormState extends State<_HealthRecordForm> {
       if (mounted) setState(() => _submitting = false);
     }
   }
+}
+
+void _openChat(
+  BuildContext context, {
+  required String patientId,
+}) async {
+  final navigator = Navigator.of(context);
+  final messenger = ScaffoldMessenger.of(context);
+  final doctorId = await _promptDoctorId(context);
+  if (doctorId == null) return;
+  await _chatService.ensureChatExists(
+    patientId: patientId,
+    doctorId: doctorId,
+  );
+  await navigator.push(
+    MaterialPageRoute(
+      builder: (_) => ChatScreen(
+        patientId: patientId,
+        doctorId: doctorId,
+        currentRole: 'patient',
+      ),
+    ),
+  );
+  messenger.showSnackBar(
+    const SnackBar(content: Text('Chat ready.')),
+  );
 }

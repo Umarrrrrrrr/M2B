@@ -5,6 +5,9 @@ class SubscriptionService {
       : _firestore = firestore ?? FirebaseFirestore.instance;
 
   final FirebaseFirestore _firestore;
+  final Duration defaultDuration = const Duration(days: 30);
+
+  Duration get gracePeriod => const Duration(days: 5);
 
   /// Creates a pending subscription request from patient to doctor.
   Future<String> requestSubscription({
@@ -56,9 +59,10 @@ class SubscriptionService {
   Future<void> approveSubscription({
     required String subscriptionId,
     required String doctorId,
-    Duration duration = const Duration(days: 30),
+    Duration? duration,
   }) async {
     final subRef = _firestore.collection('subscriptions').doc(subscriptionId);
+    final effectiveDuration = duration ?? defaultDuration;
 
     await _firestore.runTransaction((transaction) async {
       final subSnap = await transaction.get(subRef);
@@ -72,13 +76,15 @@ class SubscriptionService {
 
       final patientId = data['patientId'] as String;
       final start = Timestamp.now();
-      final end =
-          Timestamp.fromDate(DateTime.now().add(duration));
+      final end = Timestamp.fromDate(DateTime.now().add(effectiveDuration));
 
       transaction.update(subRef, {
         'status': 'active',
         'startDate': start,
         'endDate': end,
+        'expiresAt': end,
+        'graceEndsAt':
+            Timestamp.fromDate(end.toDate().add(gracePeriod)),
       });
 
       final doctorPatientRef = _firestore
@@ -104,7 +110,59 @@ class SubscriptionService {
         'status': 'active',
         'startDate': start,
         'endDate': end,
+        'expiresAt': end,
+        'graceEndsAt':
+            Timestamp.fromDate(end.toDate().add(gracePeriod)),
       }, SetOptions(merge: true));
     });
+  }
+
+  Future<void> markExpiredSubscriptions() async {
+    final now = Timestamp.now();
+    final snapshots = await _firestore
+        .collection('subscriptions')
+        .where('status', isEqualTo: 'active')
+        .where('endDate', isLessThanOrEqualTo: now)
+        .get();
+    final batch = _firestore.batch();
+    for (final doc in snapshots.docs) {
+      final data = doc.data();
+      final patientId = data['patientId'] as String;
+      final doctorId = data['doctorId'] as String;
+      batch.update(doc.reference, {'status': 'expired'});
+      batch.update(
+        _firestore
+            .collection('patients')
+            .doc(patientId)
+            .collection('subscriptions')
+            .doc(doc.id),
+        {'status': 'expired'},
+      );
+      batch.update(
+        _firestore
+            .collection('doctors')
+            .doc(doctorId)
+            .collection('patients')
+            .doc(patientId),
+        {'status': 'expired'},
+      );
+    }
+    if (snapshots.docs.isNotEmpty) {
+      await batch.commit();
+    }
+  }
+
+  Future<bool> hasActiveSubscription({
+    required String patientId,
+    required String doctorId,
+  }) async {
+    final snapshot = await _firestore
+        .collection('subscriptions')
+        .where('patientId', isEqualTo: patientId)
+        .where('doctorId', isEqualTo: doctorId)
+        .where('status', isEqualTo: 'active')
+        .limit(1)
+        .get();
+    return snapshot.docs.isNotEmpty;
   }
 }

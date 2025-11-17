@@ -2,10 +2,13 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+import '../chat/chat_screen.dart';
+import '../services/chat_service.dart';
 import '../services/subscription_service.dart';
 import '../widgets/info_chip.dart';
 
 final _subscriptionService = SubscriptionService();
+final _chatService = ChatService();
 
 class DoctorDashboard extends StatelessWidget {
   const DoctorDashboard({super.key, required this.user});
@@ -68,11 +71,6 @@ class DoctorDashboard extends StatelessWidget {
                           : 'Submit docs'),
                     ),
                     const SizedBox(width: 12),
-                    OutlinedButton.icon(
-                      onPressed: () {},
-                      icon: const Icon(Icons.chat_bubble_outline),
-                      label: const Text('Open chat'),
-                    ),
                   ],
                 ),
                 const SizedBox(height: 24),
@@ -310,6 +308,36 @@ class _PendingRequestTile extends StatelessWidget {
   }
 }
 
+Future<void> _openChat(
+  BuildContext context, {
+  required String doctorId,
+  String? patientId,
+  Map<String, dynamic>? patientData,
+}) async {
+  final navigator = Navigator.of(context);
+  final messenger = ScaffoldMessenger.of(context);
+  final pid = patientId ?? patientData?['patientId'] as String?;
+  if (pid == null) {
+    messenger.showSnackBar(
+      const SnackBar(content: Text('Patient data missing.')),
+    );
+    return;
+  }
+  await _chatService.ensureChatExists(
+    patientId: pid,
+    doctorId: doctorId,
+  );
+  await navigator.push(
+    MaterialPageRoute(
+      builder: (_) => ChatScreen(
+        patientId: pid,
+        doctorId: doctorId,
+        currentRole: 'doctor',
+      ),
+    ),
+  );
+}
+
 class _DoctorPatientTile extends StatelessWidget {
   const _DoctorPatientTile({
     required this.patientId,
@@ -366,10 +394,11 @@ class _DoctorPatientTile extends StatelessWidget {
                 ),
                 trailing: IconButton(
                   onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Chat launching soon.'),
-                      ),
+                    _openChat(
+                      context,
+                      doctorId: FirebaseAuth.instance.currentUser!.uid,
+                      patientId: patientId,
+                      patientData: patient,
                     );
                   },
                   icon: const Icon(Icons.message),
