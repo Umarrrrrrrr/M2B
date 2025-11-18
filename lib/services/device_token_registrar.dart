@@ -47,15 +47,13 @@ class _DeviceTokenRegistrarState extends State<DeviceTokenRegistrar> {
       );
     } catch (e) {
       debugPrint('Failed to register FCM token: $e');
-    } catch (e) {
-      debugPrint('Failed to register FCM token: $e');
     }
   }
 
   Future<void> _registerToken({String? tokenOverride}) async {
     final token = tokenOverride ?? await _messaging.getToken();
     if (token == null) return;
-    final platform = describeEnum(defaultTargetPlatform);
+    final platform = defaultTargetPlatform.name;
     await _tokenService.registerToken(
       uid: widget.user.uid,
       token: token,
