@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'auth/auth_form.dart';
 import 'doctor/doctor_dashboard.dart';
 import 'patient/patient_dashboard.dart';
+import 'services/device_token_registrar.dart';
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -67,10 +68,16 @@ class AuthGate extends StatelessWidget {
               );
             }
             if (role == 'patient') {
-              return PatientDashboard(user: user);
+              return DeviceTokenRegistrar(
+                user: user,
+                child: PatientDashboard(user: user),
+              );
             }
             if (role == 'doctor') {
-              return DoctorDashboard(user: user);
+              return DeviceTokenRegistrar(
+                user: user,
+                child: DoctorDashboard(user: user),
+              );
             }
             return Scaffold(
               appBar: AppBar(
@@ -82,10 +89,13 @@ class AuthGate extends StatelessWidget {
                   ),
                 ],
               ),
-              body: Center(
-                child: Text(
-                  'Hi ${user.email ?? 'there'}, role: $role',
-                  textAlign: TextAlign.center,
+              body: DeviceTokenRegistrar(
+                user: user,
+                child: Center(
+                  child: Text(
+                    'Hi ${user.email ?? 'there'}, role: $role',
+                    textAlign: TextAlign.center,
+                  ),
                 ),
               ),
             );

@@ -77,7 +77,7 @@ After removal, rebuild the app and you’ll see the demo data in Firestore.
 ## Push notifications
 
 - Device tokens are stored under `users/{uid}/devices/{token}` with metadata (`platform`, `updatedAt`).
-- Use `PushTokenService.registerToken` after obtaining an FCM token on the client.
+- `DeviceTokenRegistrar` automatically requests permission and invokes `PushTokenService.registerToken` after login.
 - Cloud Functions:
   - `expireSubscriptions`: runs daily and marks overdue subscriptions as `expired` while syncing the nested documents.
   - `notifyExpiringSubscriptions`: runs daily, looks for subscriptions expiring within 3 days, and sends FCM notifications to both patient and doctor if device tokens exist.
