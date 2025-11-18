@@ -170,6 +170,37 @@ export const onNewChatMessage = functions.firestore
 
     return null;
   });
+
+export const mockPaySubscription = functions.https.onCall(
+  async (data, context) => {
+    const subscriptionId = data.subscriptionId as string;
+    if (!subscriptionId) {
+      throw new functions.https.HttpsError(
+        'invalid-argument',
+        'subscriptionId is required'
+      );
+    }
+
+    const subRef = db.collection('subscriptions').doc(subscriptionId);
+    const snap = await subRef.get();
+    if (!snap.exists) {
+      throw new functions.https.HttpsError('not-found', 'Subscription missing');
+    }
+    const subData = snap.data()!;
+    if (subData.paymentStatus === 'paid') {
+      return { message: 'Already paid' };
+    }
+
+    const reference = `MOCK-${Date.now()}`;
+    await subRef.update({
+      paymentStatus: 'paid',
+      paymentReference: reference,
+      paidAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+
+    return { message: 'Payment recorded', reference };
+  }
+);
 async function getDeviceTokens(userId: string): Promise<string[]> {
   const snapshot = await db
     .collection('users')

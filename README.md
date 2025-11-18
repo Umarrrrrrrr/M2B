@@ -40,6 +40,7 @@ Subscriptions connect a patient to a doctor through three collections:
 1. Patient taps “Request doctor” and enters a doctor ID. `SubscriptionService.requestSubscription` creates the pending documents above.
 2. Doctor sees the request in the doctor dashboard and taps “Approve”, which calls `SubscriptionService.approveSubscription`. The service flips the status to `active` and stamps the start/end dates (30 days by default).
 3. Active subscriptions unlock access to patient health records (enforced via Firestore rules discussed in the SDD).
+4. Payment mock: `mockPaySubscription` Cloud Function marks a subscription as `paymentStatus: paid`. Approval now requires the subscription to be paid first.
 
 ## Seeding sample data
 

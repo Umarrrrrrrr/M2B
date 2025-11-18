@@ -22,6 +22,7 @@ class SubscriptionService {
         'patientId': patientId,
         'doctorId': doctorId,
         'status': 'pending',
+        'paymentStatus': 'pending',
         'createdAt': now,
         'startDate': null,
         'endDate': null,
@@ -48,6 +49,7 @@ class SubscriptionService {
         'doctorId': doctorId,
         'subscriptionId': docRef.id,
         'status': 'pending',
+        'paymentStatus': 'pending',
         'requestedAt': now,
       });
     });
@@ -72,6 +74,9 @@ class SubscriptionService {
       final data = subSnap.data()!;
       if (data['doctorId'] != doctorId) {
         throw Exception('Doctor mismatch');
+      }
+      if (data['paymentStatus'] != 'paid') {
+        throw Exception('Subscription has not been paid yet');
       }
 
       final patientId = data['patientId'] as String;
@@ -119,6 +124,17 @@ class SubscriptionService {
         'graceEndsAt':
             Timestamp.fromDate(end.toDate().add(gracePeriod)),
       }, SetOptions(merge: true));
+    });
+  }
+
+  Future<void> markPaymentReceived({
+    required String subscriptionId,
+    required String reference,
+  }) async {
+    await _firestore.collection('subscriptions').doc(subscriptionId).update({
+      'paymentStatus': 'paid',
+      'paymentReference': reference,
+      'paidAt': FieldValue.serverTimestamp(),
     });
   }
 
