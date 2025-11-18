@@ -63,19 +63,71 @@ export const notifyExpiringSubscriptions = functions.pubsub
       .where('status', '==', 'active')
       .get();
 
-    snapshot.forEach((doc) => {
+    for (const doc of snapshot.docs) {
       const data = doc.data();
       const end = (data.endDate as admin.firestore.Timestamp | undefined)
         ?.toDate();
-      if (!end) return;
+      if (!end) {
+        continue;
+      }
       const time = end.getTime();
       if (time >= now && time <= soon) {
         console.log(
           `Subscription ${doc.id} for patient ${data.patientId} expires soon.`
         );
-        // Future: look up device tokens/emails and send notification here.
+        const patientId = data.patientId as string;
+        const doctorId = data.doctorId as string;
+        const daysLeft = Math.max(
+          0,
+          Math.ceil((time - now) / (1000 * 60 * 60 * 24))
+        );
+        const title = 'Subscription expiring soon';
+        const body = `Your subscription will expire in ${daysLeft} day(s).`;
+        await sendNotification(patientId, title, body, {
+          subscriptionId: doc.id,
+          type: 'subscription-expiring',
+        });
+        await sendNotification(
+          doctorId,
+          'Patient subscription expiring',
+          `Patient ${patientId} subscription expires in ${daysLeft} day(s).`,
+          {
+            subscriptionId: doc.id,
+            patientId,
+            type: 'subscription-expiring',
+          }
+        );
       }
-    });
+    }
 
     return null;
   });
+async function getDeviceTokens(userId: string): Promise<string[]> {
+  const snapshot = await db
+    .collection('users')
+    .doc(userId)
+    .collection('devices')
+    .get();
+  return snapshot.docs
+    .map((doc) => (doc.get('token') as string) ?? doc.id)
+    .filter((token) => !!token);
+}
+
+async function sendNotification(
+  userId: string,
+  title: string,
+  body: string,
+  data: Record<string, string> = {}
+) {
+  const tokens = await getDeviceTokens(userId);
+  if (!tokens.length) {
+    console.log(`No device tokens for ${userId}`);
+    return;
+  }
+
+  await admin.messaging().sendEachForMulticast({
+    tokens,
+    notification: { title, body },
+    data,
+  });
+}

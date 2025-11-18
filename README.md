@@ -19,6 +19,7 @@ lib/
  ├─ doctor/doctor_dashboard.dart
  ├─ dev/sample_seeder.dart    # Utility to insert demo docs (optional)
  ├─ services/chat_service.dart
+ ├─ services/push_token_service.dart
  ├─ services/subscription_service.dart
  └─ widgets/info_chip.dart
 ```
@@ -72,3 +73,11 @@ After removal, rebuild the app and you’ll see the demo data in Firestore.
 - Hook up real UI/UX for browsing doctors and presenting subscription requests.
 - Add Cloud Functions/HTTPS endpoints for payments, notifications, and chat.
 - Flesh out doctor approval workflows and admin tooling.
+
+## Push notifications
+
+- Device tokens are stored under `users/{uid}/devices/{token}` with metadata (`platform`, `updatedAt`).
+- Use `PushTokenService.registerToken` after obtaining an FCM token on the client.
+- Cloud Functions:
+  - `expireSubscriptions`: runs daily and marks overdue subscriptions as `expired` while syncing the nested documents.
+  - `notifyExpiringSubscriptions`: runs daily, looks for subscriptions expiring within 3 days, and sends FCM notifications to both patient and doctor if device tokens exist.
