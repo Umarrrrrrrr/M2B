@@ -230,3 +230,38 @@ async function sendNotification(
     data,
   });
 }
+export const onNewHealthRecord = functions.firestore
+  .document('patients/{patientId}/healthRecords/{recordId}')
+  .onCreate(async (snapshot, context) => {
+    const patientId = context.params.patientId as string;
+    const record = snapshot.data();
+
+    const subscriptions = await db
+      .collection('subscriptions')
+      .where('patientId', '==', patientId)
+      .where('status', '==', 'active')
+      .limit(5)
+      .get();
+
+    if (subscriptions.empty) return null;
+
+    const message =
+      record.notes || 'New health data has been shared by the patient.';
+    await Promise.all(
+      subscriptions.docs.map((doc) => {
+        const doctorId = doc.data().doctorId as string;
+        return sendNotification(
+          doctorId,
+          'New patient update',
+          message,
+          {
+            type: 'health-record',
+            patientId,
+            recordId: context.params.recordId,
+          }
+        );
+      })
+    );
+
+    return null;
+  });
