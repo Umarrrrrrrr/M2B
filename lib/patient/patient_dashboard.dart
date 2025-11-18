@@ -46,6 +46,8 @@ class PatientDashboard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _PatientHeader(data: data, emailFallback: user.email),
+                const SizedBox(height: 12),
+                _SubscriptionStatusBanner(patientId: uid),
                 const SizedBox(height: 16),
                 Wrap(
                   spacing: 12,
@@ -495,6 +497,123 @@ class _HealthRecordFormState extends State<_HealthRecordForm> {
   }
 }
 
+class _SubscriptionStatusBanner extends StatelessWidget {
+  const _SubscriptionStatusBanner({required this.patientId});
+
+  final String patientId;
+
+  @override
+  Widget build(BuildContext context) {
+    final stream = FirebaseFirestore.instance
+        .collection('patients')
+        .doc(patientId)
+        .collection('subscriptions')
+        .orderBy('startDate', descending: true)
+        .limit(1)
+        .snapshots();
+
+    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+      stream: stream,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const LinearProgressIndicator();
+        }
+        final docs = snapshot.data?.docs ?? [];
+        if (docs.isEmpty) {
+          return _StatusContainer(
+            title: 'No subscription yet',
+            message: 'Request a doctor to activate personalized care.',
+            color: Theme.of(context).colorScheme.surfaceContainerHighest,
+          );
+        }
+
+        final data = docs.first.data();
+        final status = (data['status'] as String? ?? 'pending').toLowerCase();
+        final endDate = (data['endDate'] as Timestamp?)?.toDate();
+        final graceEnds = (data['graceEndsAt'] as Timestamp?)?.toDate();
+        final now = DateTime.now();
+        int? daysLeft;
+        if (endDate != null) {
+          daysLeft = endDate.difference(now).inDays;
+        }
+
+        if (status == 'active') {
+          if (graceEnds != null && graceEnds.isBefore(now)) {
+            return _StatusContainer(
+              title: 'Expired',
+              message: 'Your subscription has ended. Renew to continue.',
+              color: Colors.red[50]!,
+            );
+          }
+          final msg = daysLeft != null && daysLeft >= 0
+              ? '$daysLeft day(s) remaining'
+              : 'In grace period until ${_formatDate(graceEnds ?? endDate)}';
+          return _StatusContainer(
+            title: 'Active subscription',
+            message: msg,
+            color: Colors.green[50]!,
+          );
+        }
+
+        if (status == 'pending') {
+          return _StatusContainer(
+            title: 'Pending approval',
+            message: 'Waiting for the doctor to approve your request.',
+            color: Colors.orange[50]!,
+          );
+        }
+
+        return _StatusContainer(
+          title: 'Subscription $status',
+          message: 'Renew or request another doctor to continue.',
+          color: Colors.red[50]!,
+        );
+      },
+    );
+  }
+}
+
+String _formatDate(DateTime? date) {
+  if (date == null) return '';
+  return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+}
+
+class _StatusContainer extends StatelessWidget {
+  const _StatusContainer({
+    required this.title,
+    required this.message,
+    required this.color,
+  });
+
+  final String title;
+  final String message;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
+          const SizedBox(height: 4),
+          Text(message),
+        ],
+      ),
+    );
+  }
+}
+
+
 void _openChat(
   BuildContext context, {
   required String patientId,
@@ -503,6 +622,18 @@ void _openChat(
   final messenger = ScaffoldMessenger.of(context);
   final doctorId = await _promptDoctorId(context);
   if (doctorId == null) return;
+  final hasActive = await _subscriptionService.hasActiveSubscription(
+    patientId: patientId,
+    doctorId: doctorId,
+  );
+  if (!hasActive) {
+    messenger.showSnackBar(
+      const SnackBar(
+        content: Text('You need an active subscription with this doctor.'),
+      ),
+    );
+    return;
+  }
   await _chatService.ensureChatExists(
     patientId: patientId,
     doctorId: doctorId,

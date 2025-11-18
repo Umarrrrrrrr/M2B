@@ -97,6 +97,11 @@ class SubscriptionService {
         'subscriptionId': subscriptionId,
         'status': 'active',
         'linkedAt': start,
+        'startDate': start,
+        'endDate': end,
+        'expiresAt': end,
+        'graceEndsAt':
+            Timestamp.fromDate(end.toDate().add(gracePeriod)),
       }, SetOptions(merge: true));
 
       final patientSubsRef = _firestore

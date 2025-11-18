@@ -99,12 +99,16 @@ class DoctorDashboard extends StatelessWidget {
                         itemBuilder: (context, index) {
                           final link = links[index].data();
                           final patientId = link['patientId'] as String?;
+                          final status = link['status'] as String? ?? 'unknown';
+                          final endDate = link['endDate'] as Timestamp?;
                           if (patientId == null) {
                             return const SizedBox.shrink();
                           }
                           return _DoctorPatientTile(
                             patientId: patientId,
                             subscriptionId: link['subscriptionId'] as String?,
+                            status: status,
+                            endDate: endDate,
                           );
                         },
                       );
@@ -342,10 +346,14 @@ class _DoctorPatientTile extends StatelessWidget {
   const _DoctorPatientTile({
     required this.patientId,
     this.subscriptionId,
+    required this.status,
+    this.endDate,
   });
 
   final String patientId;
   final String? subscriptionId;
+  final String status;
+  final Timestamp? endDate;
 
   @override
   Widget build(BuildContext context) {
@@ -378,6 +386,20 @@ class _DoctorPatientTile extends StatelessWidget {
             future: latestRecord,
             builder: (context, recordSnap) {
               final record = recordSnap.data?.docs.first.data();
+              final statusText = status.toUpperCase();
+              final isActive = status == 'active';
+              final DateTime? end = endDate?.toDate();
+              final int? daysLeft = end?.difference(DateTime.now()).inDays;
+              final String statusLabel = isActive
+                  ? (daysLeft != null && daysLeft >= 0
+                      ? 'Active · $daysLeft day(s) left'
+                      : 'In grace period')
+                  : 'Status: $statusText';
+              final Color statusColor = isActive
+                  ? Theme.of(context).colorScheme.primary
+                  : status == 'pending'
+                      ? Colors.orange
+                      : Colors.red;
               return ListTile(
                 title: Text(patient['fullName'] as String? ?? 'Unnamed patient'),
                 subtitle: Column(
@@ -390,17 +412,23 @@ class _DoctorPatientTile extends StatelessWidget {
                       ),
                     if (subscriptionId != null)
                       Text('Subscription: $subscriptionId'),
+                    Text(
+                      statusLabel,
+                      style: TextStyle(color: statusColor),
+                    ),
                   ],
                 ),
                 trailing: IconButton(
-                  onPressed: () {
-                    _openChat(
-                      context,
-                      doctorId: FirebaseAuth.instance.currentUser!.uid,
-                      patientId: patientId,
-                      patientData: patient,
-                    );
-                  },
+                  onPressed: isActive
+                      ? () {
+                          _openChat(
+                            context,
+                            doctorId: FirebaseAuth.instance.currentUser!.uid,
+                            patientId: patientId,
+                            patientData: patient,
+                          );
+                        }
+                      : null,
                   icon: const Icon(Icons.message),
                 ),
               );
