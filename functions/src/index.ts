@@ -51,3 +51,31 @@ export const expireSubscriptions = functions.pubsub
     console.log(`Expired ${snapshot.size} subscriptions.`);
     return null;
   });
+
+export const notifyExpiringSubscriptions = functions.pubsub
+  .schedule('every 24 hours')
+  .onRun(async () => {
+    const now = Date.now();
+    const soon = now + 3 * 24 * 60 * 60 * 1000;
+
+    const snapshot = await db
+      .collection('subscriptions')
+      .where('status', '==', 'active')
+      .get();
+
+    snapshot.forEach((doc) => {
+      const data = doc.data();
+      const end = (data.endDate as admin.firestore.Timestamp | undefined)
+        ?.toDate();
+      if (!end) return;
+      const time = end.getTime();
+      if (time >= now && time <= soon) {
+        console.log(
+          `Subscription ${doc.id} for patient ${data.patientId} expires soon.`
+        );
+        // Future: look up device tokens/emails and send notification here.
+      }
+    });
+
+    return null;
+  });
