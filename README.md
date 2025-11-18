@@ -20,6 +20,8 @@ lib/
  ├─ dev/sample_seeder.dart    # Utility to insert demo docs (optional)
  ├─ services/chat_service.dart
  ├─ services/push_token_service.dart
+ ├─ services/device_token_registrar.dart
+ ├─ services/doctor_verification_service.dart
  ├─ services/subscription_service.dart
  └─ widgets/info_chip.dart
 ```
