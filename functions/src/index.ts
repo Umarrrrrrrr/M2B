@@ -136,6 +136,40 @@ export const onSubscriptionApproved = functions.firestore
 
     return null;
   });
+
+export const onNewChatMessage = functions.firestore
+  .document('chats/{chatId}/messages/{messageId}')
+  .onCreate(async (snapshot, context) => {
+    const data = snapshot.data();
+    const chatRef = db.collection('chats').doc(context.params.chatId);
+    const chat = await chatRef.get();
+    if (!chat.exists) return null;
+
+    const chatData = chat.data();
+    const patientId = chatData?.patientId as string;
+    const doctorId = chatData?.doctorId as string;
+    const senderId = data.senderId as string;
+    const recipients: string[] = [];
+    if (patientId && patientId !== senderId) recipients.push(patientId);
+    if (doctorId && doctorId !== senderId) recipients.push(doctorId);
+    if (!recipients.length) return null;
+
+    await Promise.all(
+      recipients.map((uid) =>
+        sendNotification(
+          uid,
+          'New chat message',
+          (data.text as string) ?? 'Tap to open the conversation.',
+          {
+            type: 'chat-message',
+            chatId: context.params.chatId,
+          }
+        )
+      )
+    );
+
+    return null;
+  });
 async function getDeviceTokens(userId: string): Promise<string[]> {
   const snapshot = await db
     .collection('users')
