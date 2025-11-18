@@ -102,6 +102,40 @@ export const notifyExpiringSubscriptions = functions.pubsub
 
     return null;
   });
+
+export const onSubscriptionApproved = functions.firestore
+  .document('subscriptions/{id}')
+  .onUpdate(async (change, context) => {
+    const beforeStatus = change.before.get('status');
+    const afterStatus = change.after.get('status');
+    if (beforeStatus === 'active' || afterStatus !== 'active') {
+      return null;
+    }
+
+    const data = change.after.data();
+    const patientId = data.patientId as string;
+    const doctorId = data.doctorId as string;
+    const patientTitle = 'Subscription approved';
+    const patientBody =
+      'Your doctor has approved your subscription. You can now chat and share data.';
+    const doctorTitle = 'New patient activated';
+    const doctorBody =
+      `Patient ${patientId} is now active. Check their dashboard for updates.`;
+
+    await Promise.all([
+      sendNotification(patientId, patientTitle, patientBody, {
+        subscriptionId: context.params.id,
+        type: 'subscription-approved',
+      }),
+      sendNotification(doctorId, doctorTitle, doctorBody, {
+        subscriptionId: context.params.id,
+        patientId,
+        type: 'subscription-approved',
+      }),
+    ]);
+
+    return null;
+  });
 async function getDeviceTokens(userId: string): Promise<string[]> {
   const snapshot = await db
     .collection('users')
